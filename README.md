@@ -2,10 +2,10 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Features
 
-- ✅ **Authentication**: Better Auth with email/password authentication
-- ✅ **Database**: PostgreSQL with Prisma ORM
-- ✅ **TypeScript**: Full type safety
-- ✅ **Next.js 16**: App Router with React Server Components
+- **Authentication**: Better Auth with email/password authentication
+- **Database**: PostgreSQL with Prisma ORM
+- **TypeScript**: Full type safety
+- **Next.js 16**: App Router with React Server Components
 
 ## Getting Started
 
