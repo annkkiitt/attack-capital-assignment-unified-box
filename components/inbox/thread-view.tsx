@@ -214,17 +214,18 @@ export function ThreadView({ threadId, onBack, onReply, onForward }: ThreadViewP
       </div>
             {/* Message Composer */}
             <MessageComposer
-        threadId={threadId || undefined}
-        contactId={thread?.contact.id}
-        defaultChannel={thread?.channel}
-        defaultTo={thread ? (thread.contact.phone || thread.contact.email || '') : ''}
-        onSend={() => {
-          // Refresh thread messages
-          if (threadId) {
-            fetchThread(threadId);
-          }
-        }}
-      />
+              threadId={threadId || undefined}
+              contactId={thread?.contact.id}
+              defaultChannel={thread?.channel}
+              defaultTo={thread ? (thread.contact.phone || thread.contact.email || '') : ''}
+              lockChannel={true}
+              onSend={() => {
+                // Refresh thread messages
+                if (threadId) {
+                  fetchThread(threadId);
+                }
+              }}
+            />
     </div>
   );
 }

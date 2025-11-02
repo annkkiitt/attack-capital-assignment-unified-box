@@ -25,6 +25,7 @@ interface MessageComposerProps {
   defaultTo?: string;
   onSend?: () => void;
   onClose?: () => void;
+  lockChannel?: boolean; // When true, lock channel to thread's channel
 }
 
 const channelIcons = {
@@ -46,6 +47,7 @@ export function MessageComposer({
   defaultTo,
   onSend,
   onClose,
+  lockChannel = false,
 }: MessageComposerProps) {
   const [channel, setChannel] = useState<'sms' | 'whatsapp' | 'email'>(defaultChannel);
   const [to, setTo] = useState(defaultTo || '');
@@ -98,7 +100,7 @@ export function MessageComposer({
         scheduledFor: scheduledFor || undefined,
       };
 
-      const response = await fetch('/api/test-message', {
+      const response = await fetch('/api/messages/send', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -141,28 +143,44 @@ export function MessageComposer({
         </div>
       )}
 
-      {/* Channel Selector */}
-      <div className="flex items-center gap-2">
-        <Label className="text-sm">Channel:</Label>
-        <div className="flex gap-1">
-          {(['sms', 'whatsapp', 'email'] as const).map((ch) => {
-            const Icon = channelIcons[ch];
-            return (
-              <Button
-                key={ch}
-                type="button"
-                variant={channel === ch ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setChannel(ch)}
-                className={channel === ch ? channelColors[ch] : ''}
-              >
-                <Icon className="h-4 w-4 mr-1" />
-                {ch.toUpperCase()}
-              </Button>
-            );
-          })}
+      {/* Channel Selector - Locked when replying in thread */}
+      {lockChannel ? (
+        <div className="flex items-center gap-2">
+          <Label className="text-sm">Channel:</Label>
+          <Badge className={channelColors[channel]}>
+            {(() => {
+              const Icon = channelIcons[channel];
+              return Icon ? <Icon className="h-3 w-3 mr-1" /> : null;
+            })()}
+            {channel.toUpperCase()}
+          </Badge>
+          <span className="text-xs text-muted-foreground">
+            (locked to thread channel)
+          </span>
         </div>
-      </div>
+      ) : (
+        <div className="flex items-center gap-2">
+          <Label className="text-sm">Channel:</Label>
+          <div className="flex gap-1">
+            {(['sms', 'whatsapp', 'email'] as const).map((ch) => {
+              const Icon = channelIcons[ch];
+              return (
+                <Button
+                  key={ch}
+                  type="button"
+                  variant={channel === ch ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setChannel(ch)}
+                  className={channel === ch ? channelColors[ch] : ''}
+                >
+                  <Icon className="h-4 w-4 mr-1" />
+                  {ch.toUpperCase()}
+                </Button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Recipient (if not in thread context) */}
       {!threadId && (

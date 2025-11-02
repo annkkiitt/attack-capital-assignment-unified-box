@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, Phone, Mail, Search, Filter } from 'lucide-react';
+import { MessageSquare, Phone, Mail, Search, Filter, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface Thread {
@@ -29,6 +29,7 @@ interface Thread {
 
 interface ThreadListProps {
   onThreadSelect?: (threadId: string) => void;
+  onNewMessage?: () => void;
 }
 
 const channelIcons = {
@@ -43,7 +44,7 @@ const channelColors = {
   email: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300',
 };
 
-export function ThreadList({ onThreadSelect }: ThreadListProps) {
+export function ThreadList({ onThreadSelect, onNewMessage }: ThreadListProps) {
   const [threads, setThreads] = useState<Thread[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
@@ -114,6 +115,15 @@ export function ThreadList({ onThreadSelect }: ThreadListProps) {
 
   return (
     <div className="flex flex-col h-full">
+      {/* New Message Button */}
+      {onNewMessage && (
+        <div className="p-4 border-b">
+          <Button onClick={onNewMessage} className="w-full" size="sm">
+            <Plus className="h-4 w-4 mr-2" />
+            New Message
+          </Button>
+        </div>
+      )}
       {/* Filters */}
       <div className="p-4 border-b space-y-3">
         {/* Search */}
