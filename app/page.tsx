@@ -2,7 +2,6 @@ import {
   HeroSection,
   FeaturesSection,
   IntegrationTable,
-  TechStackSection,
   Footer,
 } from "@/components/landing";
 
@@ -12,7 +11,6 @@ export default function Home() {
       <HeroSection />
       <FeaturesSection />
       <IntegrationTable />
-      <TechStackSection />
       <Footer />
     </div>
   );

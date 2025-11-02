@@ -5,13 +5,13 @@ import { Sparkles } from "lucide-react";
 
 export function HeroSection() {
   return (
-    <section className="relative h-screen overflow-hidden bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 text-white">
+    <section className="relative h-screen overflow-hidden bg-gradient-to-br from-slate-950 via-slate-800 to-slate-950 text-white">
       <div className="absolute inset-0 bg-grid-white/10 bg-[size:20px_20px]" />
       <div className="relative container mx-auto px-4 py-24 md:py-32">
         <div className="max-w-4xl mx-auto text-center space-y-8">
           <Badge className="bg-white/20 text-white hover:bg-white/30 border-white/30">
             <Sparkles className="w-3 h-3 mr-2" />
-            Unified Communication Platform
+            By Attack Capital
           </Badge>
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
             All Your Messages.
