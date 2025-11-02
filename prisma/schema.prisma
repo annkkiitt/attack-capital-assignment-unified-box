@@ -15,13 +15,24 @@ model User {
   email         String
   emailVerified Boolean   @default(false)
   image         String?
+  role          UserRole  @default(viewer) // Role-based access control
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @default(now()) @updatedAt
   sessions      Session[]
   accounts      Account[]
+  messages      Message[]      // Messages sent by user
+  notes         Note[]         // Notes created by user
+  scheduledMessages ScheduledMessage[] // Scheduled messages by user
+  analyticsEvents AnalyticsEvent[]      // Analytics events created by user
 
   @@unique([email])
   @@map("user")
+}
+
+enum UserRole {
+  viewer  // Can view only
+  editor  // Can send messages, create notes
+  admin   // Full access, manage users
 }
 
 model Session {
@@ -67,4 +78,305 @@ model Verification {
   updatedAt  DateTime @default(now()) @updatedAt
 
   @@map("verification")
+}
+
+// ============================================
+// Contact Management Models
+// ============================================
+
+/**
+ * Unified Contact model
+ * Aggregates contact information across all channels (phone, email, social)
+ */
+model Contact {
+  id              String    @id @default(cuid())
+  name            String?
+  phone           String?   // E.164 format
+  email           String?
+  // Social media handles
+  twitterHandle   String?
+  facebookHandle  String?
+  // Metadata
+  status          ContactStatus @default(lead)
+  avatar          String?   // Avatar URL
+  metadata        Json?     // Custom key-value pairs
+  // Duplicate detection
+  mergedFromIds   String[]  @default([]) // IDs of contacts merged into this one
+  lastContactedAt DateTime? // Last message timestamp
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @default(now()) @updatedAt
+  
+  // Relations
+  threads         Thread[]
+  notes           Note[]
+  scheduledMessages ScheduledMessage[]
+  analyticsEvents AnalyticsEvent[]
+
+  @@index([phone])
+  @@index([email])
+  @@index([status])
+  @@map("contact")
+}
+
+enum ContactStatus {
+  lead      // New contact, not yet engaged
+  customer  // Active customer
+  archived  // Archived/inactive
+}
+
+// ============================================
+// Thread Management Models
+// ============================================
+
+/**
+ * Thread model - Groups messages by contact/channel
+ * Represents a conversation thread (similar to OpenPhone style)
+ */
+model Thread {
+  id            String    @id @default(cuid())
+  contactId     String
+  contact       Contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  channel       Channel   // Primary channel for this thread
+  status        ThreadStatus @default(open)
+  unreadCount   Int       @default(0)
+  lastMessageAt DateTime? // Timestamp of last message
+  // Metadata
+  subject       String?   // For email threads
+  metadata      Json?     // Custom metadata
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @default(now()) @updatedAt
+  
+  // Relations
+  messages      Message[]
+
+  @@index([contactId])
+  @@index([status])
+  @@index([lastMessageAt])
+  @@map("thread")
+}
+
+enum Channel {
+  sms
+  whatsapp
+  email
+}
+
+enum ThreadStatus {
+  open      // Active conversation
+  closed    // Resolved/closed
+  archived  // Archived
+}
+
+// ============================================
+// Message Models
+// ============================================
+
+/**
+ * Unified Message model
+ * Normalizes messages across all channels (SMS, WhatsApp, Email)
+ */
+model Message {
+  id            String    @id @default(cuid())
+  threadId      String
+  thread        Thread    @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  channel       Channel
+  
+  // Sender/Recipient
+  from          String    // Sender identifier (phone/email)
+  to            String    // Recipient identifier (phone/email)
+  fromName      String?   // Sender name (if available)
+  toName        String?   // Recipient name (if available)
+  
+  // Content
+  body          String?   // Text content
+  subject       String?   // For email
+  htmlBody      String?   // HTML content for email/WhatsApp
+  
+  // Direction & Status
+  direction     MessageDirection
+  status        MessageStatus @default(pending)
+  externalId   String?   // Provider's message ID (e.g., Twilio SID)
+  
+  // User tracking (for outbound messages)
+  userId        String?   // User who sent the message
+  user          User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  // Metadata
+  metadata      Json?     // Custom metadata (tags, campaign info, etc.)
+  errorCode     String?   // Error code if failed
+  errorMessage  String?   // Error message if failed
+  readAt        DateTime? // When message was read (for WhatsApp/Email)
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @default(now()) @updatedAt
+  sentAt        DateTime? // When message was actually sent
+  
+  // Relations
+  attachments   MessageAttachment[]
+  analyticsEvents AnalyticsEvent[]
+
+  @@index([threadId])
+  @@index([channel])
+  @@index([direction])
+  @@index([status])
+  @@index([externalId])
+  @@index([createdAt])
+  @@map("message")
+}
+
+enum MessageDirection {
+  inbound  // Received message
+  outbound // Sent message
+}
+
+enum MessageStatus {
+  pending   // Queued/waiting to send
+  sent      // Sent successfully
+  delivered // Delivered to recipient
+  failed    // Failed to send
+  read      // Read by recipient (WhatsApp/Email)
+}
+
+/**
+ * Message Attachment model
+ * Stores media files (images, documents, audio, video)
+ */
+model MessageAttachment {
+  id          String    @id @default(cuid())
+  messageId   String
+  message     Message   @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  
+  filename    String
+  contentType String   // MIME type
+  url         String?  // URL to the media file
+  size        Int?     // Size in bytes
+  
+  // Local storage (if downloaded)
+  localPath   String?  // Path to local file
+  downloaded  Boolean  @default(false)
+  
+  createdAt   DateTime  @default(now())
+
+  @@index([messageId])
+  @@map("message_attachment")
+}
+
+// ============================================
+// Scheduling Models
+// ============================================
+
+/**
+ * Scheduled Message model
+ * Queues messages for future delivery
+ */
+model ScheduledMessage {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contactId     String
+  contact       Contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  
+  channel       Channel
+  to            String    // Recipient
+  body          String
+  subject       String?   // For email
+  htmlBody      String?   // For email/WhatsApp
+  
+  scheduledFor  DateTime  // When to send
+  executed      Boolean   @default(false)
+  executedAt    DateTime?
+  messageId     String?   // Link to created Message after execution
+  
+  // Error handling
+  attempts      Int       @default(0)
+  lastError     String?
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @default(now()) @updatedAt
+
+  @@index([userId])
+  @@index([contactId])
+  @@index([scheduledFor])
+  @@index([executed])
+  @@map("scheduled_message")
+}
+
+// ============================================
+// Collaboration Models
+// ============================================
+
+/**
+ * Note model - Internal notes about contacts
+ * Supports @mentions for team collaboration
+ */
+model Note {
+  id            String    @id @default(cuid())
+  contactId     String
+  contact       Contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  content       String    // Note content (supports @mentions)
+  isPrivate     Boolean   @default(false) // Private notes visible only to creator and admins
+  
+  // @mentions tracking
+  mentionedUserIds String[] @default([]) // User IDs mentioned in note
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @default(now()) @updatedAt
+
+  @@index([contactId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("note")
+}
+
+// ============================================
+// Analytics Models
+// ============================================
+
+/**
+ * Analytics Event model
+ * Tracks engagement metrics and events
+ */
+model AnalyticsEvent {
+  id            String    @id @default(cuid())
+  
+  // Context
+  contactId     String?
+  contact       Contact?  @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  messageId     String?
+  message       Message?   @relation(fields: [messageId], references: [id], onDelete: SetNull)
+  userId        String?
+  user          User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  // Event details
+  eventType     AnalyticsEventType
+  channel       Channel?
+  
+  // Metrics
+  responseTime  Int?       // Response time in seconds
+  metadata      Json?      // Additional event data
+  
+  createdAt     DateTime  @default(now())
+
+  @@index([contactId])
+  @@index([messageId])
+  @@index([userId])
+  @@index([eventType])
+  @@index([channel])
+  @@index([createdAt])
+  @@map("analytics_event")
+}
+
+enum AnalyticsEventType {
+  message_sent      // Message was sent
+  message_delivered // Message was delivered
+  message_read      // Message was read
+  message_failed    // Message failed to send
+  response_received // Response received from contact
+  contact_created   // New contact created
+  note_created      // Note created
+  thread_opened     // Thread opened/viewed
 }
