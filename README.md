@@ -2,6 +2,9 @@
 
 A Next.js application for managing multi-channel messaging (SMS, WhatsApp, Email) with a unified inbox interface.
 
+## Video walkthrough
+- See [Loom video link](https://www.loom.com/share/d8f14e9aed464505ae6aaf5e1ec43d0c) for detailed system architecture
+
 ## Quick Start
 
 1. **Clone the repository**
