@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Reply, Forward, ArrowLeft } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Phone, Mail, MessageSquare } from 'lucide-react';
+import { MessageComposer } from './message-composer';
 
 interface Thread {
   id: string;
@@ -74,6 +75,13 @@ export function ThreadView({ threadId, onBack, onReply, onForward }: ThreadViewP
     }
 
     fetchThread(threadId);
+    
+    // Poll every 5 seconds to get new messages
+    // const interval = setInterval(() => {
+    //   fetchThread(threadId);
+    // }, 5000);
+    
+    // return () => clearInterval(interval);
   }, [threadId]);
 
   const fetchThread = async (id: string) => {
@@ -204,6 +212,19 @@ export function ThreadView({ threadId, onBack, onReply, onForward }: ThreadViewP
           ))
         )}
       </div>
+            {/* Message Composer */}
+            <MessageComposer
+        threadId={threadId || undefined}
+        contactId={thread?.contact.id}
+        defaultChannel={thread?.channel}
+        defaultTo={thread ? (thread.contact.phone || thread.contact.email || '') : ''}
+        onSend={() => {
+          // Refresh thread messages
+          if (threadId) {
+            fetchThread(threadId);
+          }
+        }}
+      />
     </div>
   );
 }

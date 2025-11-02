@@ -39,16 +39,30 @@ export async function POST(request: NextRequest) {
     }
 
     // Determine if this is an inbound message or status callback
-    const isStatusCallback = payload.MessageStatus || payload.SmsStatus;
+    // ✅ Inbound messages have Body and From
+    // ✅ Status callbacks have MessageStatus/SmsStatus but no Body
+    const hasMessageBody = !!payload.Body || !!payload.MediaUrl0; // Also check for media
+    const isInboundMessage = hasMessageBody && (!!payload.From || !!payload.To);
+    const isStatusCallback = (payload.MessageStatus || payload.SmsStatus) && !hasMessageBody;
     
-    if (isStatusCallback) {
-      // Handle status callback (delivery receipts)
+    if (isInboundMessage) {
+      // Handle inbound message (replies from contacts)
+      await handleInboundMessage(payload);
+      return NextResponse.json({ received: true });
+    } else if (isStatusCallback) {
+      // Handle status callback (delivery receipts for outbound messages)
       await handleStatusCallback(payload);
       return NextResponse.json({ received: true });
     } else {
-      // Handle inbound message
-      await handleInboundMessage(payload);
-      return NextResponse.json({ received: true });
+      // Unknown webhook type - log it
+      console.warn('Unknown webhook type received:', {
+        hasBody: !!payload.Body,
+        hasFrom: !!payload.From,
+        hasMessageStatus: !!payload.MessageStatus,
+        hasSmsStatus: !!payload.SmsStatus,
+        payloadKeys: Object.keys(payload),
+      });
+      return NextResponse.json({ received: true }); // Acknowledge anyway
     }
   } catch (error) {
     console.error('Twilio webhook error:', error);

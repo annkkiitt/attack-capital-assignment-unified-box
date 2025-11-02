@@ -7,7 +7,7 @@ import { MessageStatus } from '@prisma/client';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { channel, to, body: messageBody, subject, from } = body;
+    const { channel, to, body: messageBody, subject, from, threadId } = body;
 
     if (!channel || !to || !messageBody) {
       return NextResponse.json(
@@ -16,7 +16,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get current user (optional - for tracking who sent)
     const session = await auth.api.getSession({ headers: request.headers });
     const userId = session?.user?.id;
 
@@ -28,12 +27,8 @@ export async function POST(request: NextRequest) {
       from: from || undefined,
     };
 
-    console.log('Sending message:', payload);
-
-    // Send message via integration
     const response = await sendMessage(payload);
 
-    // Store message in database if sent successfully
     if (response.success && response.externalId) {
       try {
         await storeOutboundMessage({
@@ -47,8 +42,7 @@ export async function POST(request: NextRequest) {
           status: response.status as MessageStatus,
         });
       } catch (dbError) {
-        // Log error but don't fail the request
-        console.error('Error storing message in database:', dbError);
+        console.error('Error storing message:', dbError);
       }
     }
 

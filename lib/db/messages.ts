@@ -192,8 +192,26 @@ export async function updateMessageStatus(
     readAt?: Date;
   }
 ) {
-  const message = await prisma.message.update({
+  // ✅ First find the message by externalId (with thread relation)
+  const existingMessage = await prisma.message.findFirst({
     where: { externalId },
+    include: {
+      thread: {
+        select: { contactId: true },
+      },
+    },
+  });
+
+  if (!existingMessage) {
+    // ✅ Log warning but don't throw - message might not have been stored yet
+    console.warn(`⚠️ Message with externalId ${externalId} not found. Status: ${status}`);
+    console.warn('This can happen if the message was sent before storage was implemented.');
+    return null;
+  }
+
+  // ✅ Then update using the id
+  const message = await prisma.message.update({
+    where: { id: existingMessage.id },
     data: {
       status,
       errorCode: options?.errorCode,
@@ -204,28 +222,41 @@ export async function updateMessageStatus(
     },
   });
 
-  // Create analytics event
-  await prisma.analyticsEvent.create({
-    data: {
-      messageId: message.id,
-      eventType: mapStatusToEventType(status),
-      channel: message.channel,
-    },
-  });
+  // Create analytics event (only for statuses that have corresponding event types)
+  const eventType = mapStatusToEventType(status);
+  if (existingMessage.thread?.contactId && eventType) {
+    await prisma.analyticsEvent.create({
+      data: {
+        contactId: existingMessage.thread.contactId,
+        eventType: eventType,
+        metadata: {
+          messageId: message.id,
+          externalId: externalId,
+          status,
+        },
+      },
+    });
+  }
 
   return message;
 }
 
-function mapStatusToEventType(status: MessageStatus): 'message_delivered' | 'message_read' | 'message_failed' {
+// ✅ Fix the mapping function to return valid AnalyticsEventType values
+function mapStatusToEventType(status: MessageStatus): 'message_sent' | 'message_delivered' | 'message_read' | 'message_failed' | null {
   switch (status) {
+    case 'sent':
+      return 'message_sent';
     case 'delivered':
       return 'message_delivered';
     case 'read':
       return 'message_read';
     case 'failed':
       return 'message_failed';
+    case 'pending':
+      // Skip analytics for pending status (not a meaningful event)
+      return null;
     default:
-      return 'message_delivered';
+      return null;
   }
 }
 

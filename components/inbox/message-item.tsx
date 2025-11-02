@@ -52,14 +52,6 @@ export function MessageItem({ message, contactName }: MessageItemProps) {
           <span className="font-medium">{senderName}</span>
           <span>•</span>
           <span>{format(new Date(message.createdAt), 'MMM d, h:mm a')}</span>
-          {message.status && (
-            <>
-              <span>•</span>
-              <Badge variant="outline" className="text-xs">
-                {message.status}
-              </Badge>
-            </>
-          )}
         </div>
 
         {/* Message Content */}
