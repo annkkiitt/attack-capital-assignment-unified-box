@@ -2,8 +2,12 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles } from "lucide-react";
+import { getSession } from "@/lib/auth-server";
 
-export function HeroSection() {
+export async function HeroSection() {
+  const session = await getSession();
+  const isAuthenticated = !!session?.user;
+
   return (
     <section className="relative h-screen overflow-hidden bg-gradient-to-br from-slate-950 via-slate-800 to-slate-950 text-white">
       <div className="absolute inset-0 bg-grid-white/10 bg-[size:20px_20px]" />
@@ -26,16 +30,16 @@ export function HeroSection() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
             <Button asChild size="lg" className="bg-white text-blue-600 hover:bg-white/90">
-              <Link href="/login">Get Started</Link>
+              {isAuthenticated ? <Link href="/inbox">Go to Inbox</Link> : <Link href="/login">Get Started</Link>}
             </Button>
-            <Button
+            {!isAuthenticated && <Button
               asChild
               size="lg"
               variant="outline"
               className="bg-transparent border-white/30 text-white hover:bg-white/10"
             >
               <Link href="/signup">Sign Up Free</Link>
-            </Button>
+            </Button>}
           </div>
         </div>
       </div>

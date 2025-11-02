@@ -25,7 +25,7 @@ export function SignUpForm() {
       },
       {
         onSuccess: () => {
-          router.push("/");
+          router.push("/inbox");
           router.refresh();
         },
       }

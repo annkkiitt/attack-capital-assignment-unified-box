@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ThreadList } from '@/components/inbox/thread-list';
 import { ThreadView } from '@/components/inbox/thread-view';
 import { MessageComposer } from '@/components/inbox/message-composer';
+import { SignOutButton } from '@/components/auth/sign-out-button';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 
@@ -30,8 +31,11 @@ export default function InboxPage() {
       {/* Sidebar - Thread List */}
       <div className="w-96 border-r flex flex-col">
         <div className="p-4 border-b">
-          <h1 className="text-2xl font-bold">Inbox</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-2xl font-bold">Inbox</h1>
+            <SignOutButton />
+          </div>
+          <p className="text-sm text-muted-foreground">
             Unified messages across all channels
           </p>
         </div>

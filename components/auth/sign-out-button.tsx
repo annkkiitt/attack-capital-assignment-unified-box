@@ -10,7 +10,7 @@ export function SignOutButton() {
     await authClient.signOut({
       fetchOptions: {
         onSuccess: () => {
-          router.push("/");
+          router.push("/login");
           router.refresh();
         },
       },
@@ -20,7 +20,8 @@ export function SignOutButton() {
   return (
     <button
       onClick={handleSignOut}
-      className="bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700"
+      className="text-sm text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded"
+      title="Sign out"
     >
       Sign Out
     </button>
