@@ -1,145 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Unified Inbox
 
-## Features
+A Next.js application for managing multi-channel messaging (SMS, WhatsApp, Email) with a unified inbox interface.
 
-- **Authentication**: Better Auth with email/password authentication
-- **Database**: PostgreSQL with Prisma ORM
-- **TypeScript**: Full type safety
-- **Next.js 16**: App Router with React Server Components
+## Quick Start
 
-## Getting Started
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/annkkiitt/attack-capital-assignment-unified-box.git
+   ```
 
-### 1. Install Dependencies
+2. **Navigate to the project directory**
+   ```bash
+   cd attack-capital-assignment-unified-box
+   ```
 
-```bash
-npm install
-```
+3. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-### 2. Set Up Environment Variables
+4. **Set up environment variables**
+   
+   Check `.env.example` and create a `.env` file with your configuration:
+   - `DATABASE_URL`: Your PostgreSQL connection string
+   - `DIRECT_URL`: Same as DATABASE_URL (required for migrations)
+   - `BETTER_AUTH_SECRET`: Generate with `npx @better-auth/cli secret` or use a secure random string
+   - `TWILIO_ACCOUNT_SID`: Your Twilio Account SID
+   - `TWILIO_AUTH_TOKEN`: Your Twilio Auth Token
+   - `TWILIO_PHONE_NUMBER`: Your Twilio phone number (e.g., `+1234567890`)
+   - `TWILIO_WHATSAPP_NUMBER`: Your Twilio WhatsApp number (e.g., `whatsapp:+14155238886`)
+   - `RESEND_API_KEY`: Your Resend API key (for email)
+   - `RESEND_FROM_EMAIL`: Your verified Resend sender email
 
-Copy `.env.example` to `.env` and fill in your values:
+5. **Run Prisma migrations**
+   ```bash
+   npm run db:migrate
+   ```
 
-```bash
-cp .env.example .env
-```
+6. **Start the development server**
+   ```bash
+   npm run dev
+   ```
 
-Update the following in `.env`:
-- `DATABASE_URL`: Your PostgreSQL connection string
-- `BETTER_AUTH_SECRET`: Generate with `npx @better-auth/cli secret` or use a secure random string
-- `DIRECT_URL`: Same as DATABASE_URL (required for migrations)
+   Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### 3. Set Up Database
+## Twilio Webhook Setup
 
-Make sure PostgreSQL is running and create a database:
+For local development, use **ngrok** to expose your local server and receive webhooks:
 
-```bash
-# Example: Create database using psql
-psql -U postgres
-CREATE DATABASE my_database;
-```
+1. Install ngrok: https://ngrok.com/download
 
-### 4. Run Migrations
+2. Start your development server:
+   ```bash
+   npm run dev
+   ```
 
-```bash
-npm run db:migrate
-```
+3. In another terminal, start ngrok:
+   ```bash
+   ngrok http 3000
+   ```
 
-This will:
-- Generate Prisma Client
-- Create all necessary database tables (User, Session, Account, Verification)
+4. Copy the HTTPS URL from ngrok (e.g., `https://abc123.ngrok.io`)
 
-### 5. Start Development Server
+5. Update your Twilio account webhook URLs:
+   - **SMS**: Go to your Twilio phone number settings and set the webhook URL to `https://abc123.ngrok.io/api/webhooks/twilio`
+   - **WhatsApp**: Go to Twilio WhatsApp Sandbox and set "When a message comes in" to `https://abc123.ngrok.io/api/webhooks/twilio`
 
-```bash
-npm run dev
-```
+## Additional Resources
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-## Authentication Setup
-
-Better Auth is configured with email/password authentication. The following files have been set up:
-
-- `lib/auth.ts` - Server-side auth configuration
-- `lib/auth-client.ts` - Client-side auth client (React)
-- `lib/auth-server.ts` - Server-side helpers (getSession, requireAuth)
-- `app/api/auth/[...all]/route.ts` - Auth API routes
-- `components/auth/` - Auth UI components (SignInForm, SignUpForm, SignOutButton, UserInfo)
-
-### Using Authentication
-
-#### Client Components
-
-```tsx
-"use client";
-import { authClient } from "@/lib/auth-client";
-
-// Sign up
-await authClient.signUp.email({ email, password, name });
-
-// Sign in
-await authClient.signIn.email({ email, password });
-
-// Sign out
-await authClient.signOut();
-
-// Get session
-const { data } = await authClient.getSession();
-```
-
-#### Server Components / Server Actions
-
-```tsx
-import { getSession, requireAuth } from "@/lib/auth-server";
-
-// Get session (returns null if not authenticated)
-const session = await getSession();
-
-// Require auth (throws if not authenticated)
-const session = await requireAuth();
-```
-
-## Database Commands
-
-```bash
-# Generate Prisma Client
-npm run db:generate
-
-# Create and run migration
-npm run db:migrate
-
-# Push schema changes (development only)
-npm run db:push
-
-# Open Prisma Studio (database GUI)
-npm run db:studio
-```
-
-## Project Structure
-
-```
-├── app/
-│   ├── api/auth/[...all]/    # Better Auth API routes
-│   └── ...
-├── components/
-│   └── auth/                  # Auth UI components
-├── lib/
-│   ├── auth.ts                # Better Auth server config
-│   ├── auth-client.ts         # Better Auth React client
-│   ├── auth-server.ts         # Server-side auth helpers
-│   └── db.ts                  # Prisma client
-└── prisma/
-    └── schema.prisma          # Database schema
-```
-
-## Learn More
-
-- [Next.js Documentation](https://nextjs.org/docs)
-- [Better Auth Documentation](https://better-auth.com/docs)
-- [Prisma Documentation](https://www.prisma.io/docs)
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme).
-
-Make sure to set all environment variables in your Vercel project settings.
+- See [ARCHITECTURE.md](docs/ARCHITECTURE_SIMPLIFIED.md) for detailed system architecture
+- See [WEBHOOK_SETUP.md](lib/integrations/WEBHOOK_SETUP.md) for more webhook configuration details

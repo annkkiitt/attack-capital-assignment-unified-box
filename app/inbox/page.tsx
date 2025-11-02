@@ -6,7 +6,8 @@ import { ThreadView } from '@/components/inbox/thread-view';
 import { MessageComposer } from '@/components/inbox/message-composer';
 import { SignOutButton } from '@/components/auth/sign-out-button';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Settings } from 'lucide-react';
+import Link from 'next/link';
 
 export default function InboxPage() {
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
@@ -32,10 +33,17 @@ export default function InboxPage() {
       <div className="w-96 border-r flex flex-col">
         <div className="p-4 border-b">
           <div className="flex items-center justify-between mb-2">
-            <h1 className="text-2xl font-bold">Inbox</h1>
-            <SignOutButton />
+            <h1 className="text-xl font-bold">Inbox</h1>
+            <div className='flex gap-2'>
+              <Link href='/settings'>
+              <Button variant='outline' size="icon" title='Twilio account settings'>
+                <Settings className="w-3 h-3" />
+              </Button>
+              </Link>
+              <SignOutButton />
+            </div>
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             Unified messages across all channels
           </p>
         </div>

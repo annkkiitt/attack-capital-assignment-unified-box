@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, CheckCircle2, Info, Phone, MessageSquare, Loader2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Info, Phone, MessageSquare, Loader2, ArrowRightSquare } from 'lucide-react';
+import Link from 'next/link';
 
 interface TwilioAccountInfo {
   account: {
@@ -93,7 +94,8 @@ export function TwilioSettings() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-6xl mx-auto grid grid-cols-2 gap-4">
+
       {/* Account Status */}
       <Card>
         <CardHeader>
@@ -254,12 +256,6 @@ export function TwilioSettings() {
         </Card>
       )}
 
-      {/* Refresh Button */}
-      <div className="flex justify-end">
-        <Button variant="outline" onClick={fetchTwilioInfo}>
-          Refresh
-        </Button>
-      </div>
     </div>
   );
 }
